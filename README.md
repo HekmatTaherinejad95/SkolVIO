@@ -1,1 +1,1 @@
-# GraphSLAM_Python
+# GraphSLAM
