@@ -1,1 +1,1 @@
-# Visual Inertial Odometry using gtsam backend 
+# Visual Inertial Odometry using gtsam  
