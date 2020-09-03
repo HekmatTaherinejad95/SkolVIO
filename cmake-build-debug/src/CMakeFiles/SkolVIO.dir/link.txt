@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/SkolVIO.dir/main.cpp.o  -o SkolVIO 
