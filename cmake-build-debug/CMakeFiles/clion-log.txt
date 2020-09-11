@@ -1,4 +1,8 @@
 /snap/clion/124/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/hekmat/SkolVIO
+-- Found required Ceres dependency: Eigen version 3.3.7 in /usr/local/include/eigen3
+-- Found required Ceres dependency: glog
+-- Found required Ceres dependency: gflags
+-- Found Ceres version: 2.0.0 installed in: /usr/local with components: [EigenSparse, SparseLinearAlgebraLibrary, LAPACK, SuiteSparse, CXSparse, SchurSpecializations, Multithreading]
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /home/hekmat/SkolVIO/cmake-build-debug

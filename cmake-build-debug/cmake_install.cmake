@@ -39,7 +39,27 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/hekmat/SkolVIO/cmake-build-debug/src/cmake_install.cmake")
+  include("/home/hekmat/SkolVIO/cmake-build-debug/util/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/home/hekmat/SkolVIO/cmake-build-debug/dataset_loader/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/home/hekmat/SkolVIO/cmake-build-debug/camera_model/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/home/hekmat/SkolVIO/cmake-build-debug/feature_tracker/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/home/hekmat/SkolVIO/cmake-build-debug/imu_integrator/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)

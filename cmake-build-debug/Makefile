@@ -76,16 +76,40 @@ CMAKE_BINARY_DIR = /home/hekmat/SkolVIO/cmake-build-debug
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/snap/clion/124/bin/cmake/linux/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/snap/clion/124/bin/cmake/linux/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
 
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/snap/clion/124/bin/cmake/linux/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
 
-.PHONY : rebuild_cache/fast
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/snap/clion/124/bin/cmake/linux/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/snap/clion/124/bin/cmake/linux/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
+# Special rule for the target test
+test:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
+	/snap/clion/124/bin/cmake/linux/bin/ctest --force-new-ctest-process $(ARGS)
+.PHONY : test
+
+# Special rule for the target test
+test/fast: test
+
+.PHONY : test/fast
 
 # Special rule for the target edit_cache
 edit_cache:
@@ -97,6 +121,39 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/snap/clion/124/bin/cmake/linux/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
+
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/snap/clion/124/bin/cmake/linux/bin/cmake -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/snap/clion/124/bin/cmake/linux/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+
+.PHONY : list_install_components/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -131,17 +188,108 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named SkolVIO
+# Target rules for targets named util
 
 # Build rule for target.
-SkolVIO: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 SkolVIO
-.PHONY : SkolVIO
+util: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 util
+.PHONY : util
 
 # fast build rule for target.
-SkolVIO/fast:
-	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/SkolVIO.dir/build.make src/CMakeFiles/SkolVIO.dir/build
-.PHONY : SkolVIO/fast
+util/fast:
+	$(MAKE) $(MAKESILENT) -f util/CMakeFiles/util.dir/build.make util/CMakeFiles/util.dir/build
+.PHONY : util/fast
+
+#=============================================================================
+# Target rules for targets named dataset_loader
+
+# Build rule for target.
+dataset_loader: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 dataset_loader
+.PHONY : dataset_loader
+
+# fast build rule for target.
+dataset_loader/fast:
+	$(MAKE) $(MAKESILENT) -f dataset_loader/CMakeFiles/dataset_loader.dir/build.make dataset_loader/CMakeFiles/dataset_loader.dir/build
+.PHONY : dataset_loader/fast
+
+#=============================================================================
+# Target rules for targets named dataset_loader_app
+
+# Build rule for target.
+dataset_loader_app: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 dataset_loader_app
+.PHONY : dataset_loader_app
+
+# fast build rule for target.
+dataset_loader_app/fast:
+	$(MAKE) $(MAKESILENT) -f dataset_loader/CMakeFiles/dataset_loader_app.dir/build.make dataset_loader/CMakeFiles/dataset_loader_app.dir/build
+.PHONY : dataset_loader_app/fast
+
+#=============================================================================
+# Target rules for targets named camera_model
+
+# Build rule for target.
+camera_model: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 camera_model
+.PHONY : camera_model
+
+# fast build rule for target.
+camera_model/fast:
+	$(MAKE) $(MAKESILENT) -f camera_model/CMakeFiles/camera_model.dir/build.make camera_model/CMakeFiles/camera_model.dir/build
+.PHONY : camera_model/fast
+
+#=============================================================================
+# Target rules for targets named camera_model_app
+
+# Build rule for target.
+camera_model_app: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 camera_model_app
+.PHONY : camera_model_app
+
+# fast build rule for target.
+camera_model_app/fast:
+	$(MAKE) $(MAKESILENT) -f camera_model/CMakeFiles/camera_model_app.dir/build.make camera_model/CMakeFiles/camera_model_app.dir/build
+.PHONY : camera_model_app/fast
+
+#=============================================================================
+# Target rules for targets named feature_tracker
+
+# Build rule for target.
+feature_tracker: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 feature_tracker
+.PHONY : feature_tracker
+
+# fast build rule for target.
+feature_tracker/fast:
+	$(MAKE) $(MAKESILENT) -f feature_tracker/CMakeFiles/feature_tracker.dir/build.make feature_tracker/CMakeFiles/feature_tracker.dir/build
+.PHONY : feature_tracker/fast
+
+#=============================================================================
+# Target rules for targets named feature_tracker_app
+
+# Build rule for target.
+feature_tracker_app: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 feature_tracker_app
+.PHONY : feature_tracker_app
+
+# fast build rule for target.
+feature_tracker_app/fast:
+	$(MAKE) $(MAKESILENT) -f feature_tracker/CMakeFiles/feature_tracker_app.dir/build.make feature_tracker/CMakeFiles/feature_tracker_app.dir/build
+.PHONY : feature_tracker_app/fast
+
+#=============================================================================
+# Target rules for targets named imu_integrator
+
+# Build rule for target.
+imu_integrator: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 imu_integrator
+.PHONY : imu_integrator
+
+# fast build rule for target.
+imu_integrator/fast:
+	$(MAKE) $(MAKESILENT) -f imu_integrator/CMakeFiles/imu_integrator.dir/build.make imu_integrator/CMakeFiles/imu_integrator.dir/build
+.PHONY : imu_integrator/fast
 
 # Help Target
 help:
@@ -150,8 +298,20 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
+	@echo "... install"
+	@echo "... install/local"
+	@echo "... install/strip"
+	@echo "... list_install_components"
 	@echo "... rebuild_cache"
-	@echo "... SkolVIO"
+	@echo "... test"
+	@echo "... camera_model"
+	@echo "... camera_model_app"
+	@echo "... dataset_loader"
+	@echo "... dataset_loader_app"
+	@echo "... feature_tracker"
+	@echo "... feature_tracker_app"
+	@echo "... imu_integrator"
+	@echo "... util"
 .PHONY : help
 
 

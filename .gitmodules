@@ -1,0 +1,3 @@
+[submodule "thirdparty/Kimera-VIO"]
+	path = thirdparty/Kimera-VIO
+	url = https://github.com/MIT-SPARK/Kimera-VIO

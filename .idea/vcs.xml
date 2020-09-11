@@ -2,5 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/thirdparty/Kimera-VIO" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/thirdparty/ORB_SLAM3" vcs="Git" />
   </component>
 </project>

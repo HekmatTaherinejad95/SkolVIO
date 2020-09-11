@@ -1,0 +1,1 @@
+/usr/bin/c++  -g  -rdynamic CMakeFiles/feature_tracker_app.dir/feature_tracker_app.o  -o feature_tracker_app   -L/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug  -Wl,-rpath,/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug: libfeature_tracker.so -lmapdata -lutil -lcamera_model -lmapdata 

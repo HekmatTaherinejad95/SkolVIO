@@ -1,0 +1,5 @@
+/snap/clion/124/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/hekmat/SkolVIO/src
+-- GTSAM include directory:  /usr/local/lib/cmake/GTSAM/../../../include
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/hekmat/SkolVIO/src/cmake-build-debug

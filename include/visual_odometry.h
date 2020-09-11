@@ -15,15 +15,15 @@ class VisualOdometry
 public:
 
     enum FrameStage {
-        STAGE_FIRST_FRAME,//��һ֡
-        STAGE_SECOND_FRAME,//�ڶ�֡
-        STAGE_DEFAULT_FRAME//Ĭ��֡
+        STAGE_FIRST_FRAME,
+        STAGE_SECOND_FRAME,
+        STAGE_DEFAULT_FRAME
     };
 
     VisualOdometry(PinholeCamera* cam);
     virtual ~VisualOdometry();
 
-    /// �ṩһ��ͼ��
+
     void addImage(const cv::Mat& img, int frame_id);
 
 

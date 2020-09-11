@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/mav_dataset_loader.hpp
+iomanip
+-
+iostream
+-
+fstream
+-
+map
+-
+string
+-
+
+/home/hekmat/SkolVIO/dataset_loader/dataset_loader_app.cpp
+cstring
+-
+iostream
+-
+string
+-
+unordered_map
+-
+mav_dataset_loader.hpp
+/home/hekmat/SkolVIO/dataset_loader/mav_dataset_loader.hpp
+
