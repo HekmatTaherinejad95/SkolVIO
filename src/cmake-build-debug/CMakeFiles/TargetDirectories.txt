@@ -1,4 +1,0 @@
-/home/hekmat/SkolVIO/src/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/hekmat/SkolVIO/src/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/hekmat/SkolVIO/src/cmake-build-debug/CMakeFiles/VO.dir
-/home/hekmat/SkolVIO/src/cmake-build-debug/CMakeFiles/SkolVIO.dir
