@@ -1,1 +1,0 @@
-/usr/bin/c++  -g  -rdynamic CMakeFiles/dataset_loader_app.dir/dataset_loader_app.o  -o dataset_loader_app  -Wl,-rpath,/home/hekmat/SkolVIO/dataset_loader/cmake-build-debug libdataset_loader.so 

@@ -1,8 +1,0 @@
-/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug/CMakeFiles/install/strip.dir
-/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug/CMakeFiles/install/local.dir
-/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug/CMakeFiles/install.dir
-/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug/CMakeFiles/list_install_components.dir
-/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug/CMakeFiles/feature_tracker.dir
-/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug/CMakeFiles/feature_tracker_app.dir
-/home/hekmat/SkolVIO/feature_tracker/cmake-build-debug/CMakeFiles/edit_cache.dir

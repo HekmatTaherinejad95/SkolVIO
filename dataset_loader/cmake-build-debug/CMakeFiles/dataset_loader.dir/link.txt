@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g  -shared -Wl,-soname,libdataset_loader.so -o libdataset_loader.so CMakeFiles/dataset_loader.dir/src/mav_dataset_loader.o 
