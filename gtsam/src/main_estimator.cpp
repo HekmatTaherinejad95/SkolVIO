@@ -15,8 +15,8 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include "GraphSolver.h"
-#include "utils/Config.h"
-#include "utils/Convert.h"
+#include "Config.h"
+#include "Convert.h"
 
 // Functions
 void setup_config(ros::NodeHandle& nh, Config* config);

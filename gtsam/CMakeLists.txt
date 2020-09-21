@@ -2,6 +2,11 @@ include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+find_package(catkin REQUIRED COMPONENTS
+        roscpp
+        std_msgs
+        )
+
 file(GLOB SOURCE_FILE
         "include/*.h"
         "src/*.cpp"
