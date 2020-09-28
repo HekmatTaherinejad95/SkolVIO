@@ -1,1 +1,0 @@
-/usr/bin/c++  -g  -rdynamic CMakeFiles/coordinateTransform.dir/coordinateTransform.o  -o coordinateTransform 
