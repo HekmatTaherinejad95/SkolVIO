@@ -203,6 +203,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::C
               cout << "Quaternion = " << transposedres << endl;
               fout.open("trajectory.txt", ios::app | ios::out);
               fout << transposedres << endl;
+	      fout << t1 <<" "<< t2 << " " << t3 << " "<< q0 << " " << q1 << " " << q2 <<" " << q3 << endl;
+
 
 
           }

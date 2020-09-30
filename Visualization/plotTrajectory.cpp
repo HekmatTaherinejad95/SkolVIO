@@ -7,7 +7,7 @@ using namespace std;
 using namespace Eigen;
 
 // path to trajectory file
-string trajectory_file = "/home/hekmat/SkolVIO/Visualization/trajectory.txt";
+string trajectory_file = "/home/hekmat/SkolVIO/Visualization/trajectory4.txt";
 
 void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>>);
 
@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
   }
 
   while (!fin.eof()) {
-    double time, tx, ty, tz, qx, qy, qz, qw;
-    fin >> time >> tx >> ty >> tz >> qx >> qy >> qz >> qw;
+    double tx, ty, tz, qx, qy, qz, qw;
+    fin >> tx >> ty >> tz >> qx >> qy >> qz >> qw;
     Isometry3d Twr(Quaterniond(qw, qx, qy, qz));
     Twr.pretranslate(Vector3d(tx, ty, tz));
     poses.push_back(Twr);
