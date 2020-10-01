@@ -2,6 +2,9 @@
 #include<fstream>
 #include <ros/ros.h>
 #include <cmath>
+#include <pangolin/pangolin.h>
+#include <Eigen/Core>
+#include <unistd.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
@@ -9,7 +12,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
-#include "../include/ros_mono_vo/vo_features.h" //TODO Don't make relative import.
+#include "../include/ros_mono_vo/vo_features.h"
+#include "../include/ros_mono_vo/Drawtrajectory.h"
 
 //Algorithm Outline:
 //Capture images: ItIt, It+1It+1,
@@ -21,6 +25,7 @@
 
 
 using namespace std;
+using namespace Eigen;
 
 inline float SIGN(float x) {
     return (x >= 0.0f) ? +1.0f : -1.0f;
@@ -42,7 +47,7 @@ cv::Mat E, R, t, mask, R_f, t_f; //variables for the function.
 std::vector<cv::Point2f> points1, points2, prevFeatures, currFeatures; //Vectors to store the coordinates of feature points.
 std::vector<uchar> status;
 double focal_length;
-double scale = 2.00; 
+double scale = 0.2;
 
 bool init= false;
 
@@ -202,10 +207,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::C
               Mat transposedres = res.t();
               cout << "Quaternion = " << transposedres << endl;
               fout.open("trajectory.txt", ios::app | ios::out);
-              fout << transposedres << endl;
-	      fout << t1 <<" "<< t2 << " " << t3 << " "<< q0 << " " << q1 << " " << q2 <<" " << q3 << endl;
-
-
+              fout << t1 <<" "<< t2 << " " << t3 << " "<< q0 << " " << q1 << " " << q2 <<" " << q3 << endl;
 
           }
 
@@ -256,5 +258,24 @@ int main(int argc, char **argv)
  //   image_transport::Subscriber sub = it.subscribe("usb_cam/image_raw", 1, imageCallback);
     ros::spin();
     cv::destroyWindow("view");
+    string trajectory_file = "/home/hekmat/catkin_ws/trajectory.txt";
+    vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> poses;
+    ifstream fin(trajectory_file);
+    if (!fin) {
+        cout << "cannot find trajectory file at " << trajectory_file << endl;
+        return 1;
+    }
+
+    while (!fin.eof()) {
+        double tx, ty, tz, qx, qy, qz, qw;
+        fin >> tx >> ty >> tz >> qx >> qy >> qz >> qw;
+        Isometry3d Twr(Quaterniond(qw, qx, qy, qz));
+        Twr.pretranslate(Vector3d(tx, ty, tz));
+        poses.push_back(Twr);
+    }
+    cout << "read total " << poses.size() << " pose entries" << endl;
+
+    // draw trajectory in pangolin
+    DrawTrajectory(poses);
 
 }
