@@ -154,7 +154,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::C
               float t1 = t_f.at<double>(0, 0);
               float t2 = t_f.at<double>(0, 1);
               float t3 = t_f.at<double>(0, 2);
-              float q0 = (r11 + r22 + r33 + 1.0f) / 4.0f;
+              /*float q0 = (r11 + r22 + r33 + 1.0f) / 4.0f;
               float q1 = (r11 - r22 - r33 + 1.0f) / 4.0f;
               float q2 = (-r11 + r22 - r33 + 1.0f) / 4.0f;
               float q3 = (-r11 - r22 + r33 + 1.0f) / 4.0f;
@@ -207,7 +207,22 @@ void imageCallback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::C
               Mat transposedres = res.t();
               cout << "Quaternion = " << transposedres << endl;
               fout.open("trajectory.txt", ios::app | ios::out);
-              fout << t1 <<" "<< t2 << " " << t3 << " "<< q0 << " " << q1 << " " << q2 <<" " << q3 << endl;
+              fout << t1 <<" "<< t2 << " " << t3 << " "<< q0 << " " << q1 << " " << q2 <<" " << q3 << endl;*/
+	      Eigen::Matrix3d m; m<< r11,r12,r13,r21,r22,r23,r31,r32,r33;
+
+              std::cout<<"Input matrix:"<<std::endl<<m<<std::endl;
+              std::cout<<"Convert to quaternion q:"<<std::endl;
+              Eigen::Quaterniond q(m);
+              Print_Quaternion(q);
+              std::cout<<"Convert back to rotation matrix m1="<<std::endl;
+              Eigen::Matrix3d m1=q.normalized().toRotationMatrix();
+              std::cout<<m1<<std::endl;
+              std::cout<<"Convert again to quaternion q1="<<std::endl;
+              Eigen::Quaterniond q1(m1);
+              Print_Quaternion(q1);
+              //Output_data(q, T)
+              fout.open("trajectory.txt", ios::app | ios::out);
+              fout << t1 <<" "<< t2 << " " << t3 << " "<< q1.w() << " " << q1.x() << " " << q1.y() <<" " << q1.z() << endl;
 
           }
 
