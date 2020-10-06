@@ -13,6 +13,9 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <tf/transform_broadcaster.h>
+#include <tf/tf.h>
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
 #include "../include/ros_mono_vo/vo_features.h"
 #include "../include/ros_mono_vo/Drawtrajectory.h"
 #include "../include/ros_mono_vo/mono_vo.h"
@@ -30,6 +33,7 @@
 using namespace std;
 using namespace Eigen;
 
+
 inline float SIGN(float x) {
     return (x >= 0.0f) ? +1.0f : -1.0f;
 }
@@ -42,17 +46,17 @@ MonoVO::MonoVO(int max_frame, int min_num_pts, std::string fn_kitti)
         : max_frame_(max_frame), min_num_pts_(min_num_pts), fn_kitti_(fn_kitti), id_(0)
 {
     // Set several paths.
-    fn_calib_ = fn_kitti_ + "/sequences/01/calib.txt";
-    fn_poses_ = fn_kitti_ + "/poses/01.txt";
-    fn_images_ = fn_kitti_ + "/sequences/01/image_1/";
+    fn_calib_ = fn_kitti_ + "/sequences/02/calib.txt";
+    fn_poses_ = fn_kitti_ + "/poses/02.txt";
+    fn_images_ = fn_kitti_ + "/sequences/02/image_1/";
 
     // Set the trajectory image.
     img_traj_ = cv::Mat::zeros(600, 600, CV_8UC3);
 
     // Fetch the focal length and pricipal point.
-    FetchIntrinsicParams();
+    MonoVO::FetchIntrinsicParams();
 
-    Initialization();
+    MonoVO::Initialization();
 }
 
 
@@ -281,7 +285,7 @@ void MonoVO::PoseTracking(int nframe) {
     dst_ = curr_img_color.clone();
 
     // Draw result.
-    Visualize(nframe);
+    MonoVO::Visualize(nframe);
 
     prev_img_ = curr_img_.clone();
     prev_pts_ = curr_pts_;
@@ -392,9 +396,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::C
 
           if ((scale > 0.1) && (t.at<double>(2) > t.at<double>(0)) && (t.at<double>(2) > t.at<double>(1))) {
               //construct trajectory here:
-              ifstream fin;
-              ofstream fout;
-              fin.open ("trajectory.txt", ios::out | ios::in);
+
               t_f = t_f + scale * (R_f * t); //translation
               R_f = R * R_f; //rotation
               //file << t_f;
@@ -415,61 +417,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::C
               float t2 = t_f.at<double>(0, 1);
               float t3 = t_f.at<double>(0, 2);
 
-              /*float q0 = (r11 + r22 + r33 + 1.0f) / 4.0f;
-              float q1 = (r11 - r22 - r33 + 1.0f) / 4.0f;
-              float q2 = (-r11 + r22 - r33 + 1.0f) / 4.0f;
-              float q3 = (-r11 - r22 + r33 + 1.0f) / 4.0f;
-              if (q0 < 0.0f) {
-                  q0 = 0.0f;
-              }
-              if (q1 < 0.0f) {
-                  q1 = 0.0f;
-              }
-              if (q2 < 0.0f) {
-                  q2 = 0.0f;
-              }
-              if (q3 < 0.0f) {
-                  q3 = 0.0f;
-              }
-              q0 = sqrt(q0);
-              q1 = sqrt(q1);
-              q2 = sqrt(q2);
-              q3 = sqrt(q3);
-              if (q0 >= q1 && q0 >= q2 && q0 >= q3) {
-                  q0 *= +1.0f;
-                  q1 *= SIGN(r32 - r23);
-                  q2 *= SIGN(r13 - r31);
-                  q3 *= SIGN(r21 - r12);
-              } else if (q1 >= q0 && q1 >= q2 && q1 >= q3) {
-                  q0 *= SIGN(r32 - r23);
-                  q1 *= +1.0f;
-                  q2 *= SIGN(r21 + r12);
-                  q3 *= SIGN(r13 + r31);
-              } else if (q2 >= q0 && q2 >= q1 && q2 >= q3) {
-                  q0 *= SIGN(r13 - r31);
-                  q1 *= SIGN(r21 + r12);
-                  q2 *= +1.0f;
-                  q3 *= SIGN(r32 + r23);
-              } else if (q3 >= q0 && q3 >= q1 && q3 >= q2) {
-                  q0 *= SIGN(r21 - r12);
-                  q1 *= SIGN(r31 + r13);
-                  q2 *= SIGN(r32 + r23);
-                  q3 *= +1.0f;
-              } else {
-                  printf("coding error\n");
-              }
-              float r = NORM(q0, q1, q2, q3);
-              q0 /= r;
-              q1 /= r;
-              q2 /= r;
-              q3 /= r;
 
-              Mat res = (Mat_<float>(7, 1) << t1, t2, t3, q0, q1, q2, q3);
-              Mat transposedres = res.t();
-              cout << "Quaternion = " << transposedres << endl;
-              fout.open("trajectory.txt", ios::odomapp | ios::out);
-              fout << t1 <<" "<< t2 << " " << t3 << " "<< q0 << " " << q1 << " " << q2 <<" " << q3 << endl;
-*/
               Eigen::Matrix3d m; m<< r11,r12,r13,r21,r22,r23,r31,r32,r33;
 
               std::cout<<"Input matrix:"<<std::endl<<m<<std::endl;
@@ -483,8 +431,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::C
               Eigen::Quaterniond q1(m1);
               Print_Quaternion(q1);
               //Output_data(q, T)
-              fout.open("trajectory.txt", ios::app | ios::out);
-              fout << t1 <<" "<< t2 << " " << t3 << " "<< q1.w() << " " << q1.x() << " " << q1.y() <<" " << q1.z() << endl;
+
           }
 
 
@@ -524,17 +471,27 @@ int main(int argc, char **argv)
     std::cout << "Starting Mono VO node with Cam info...  " << std::endl;
     ros::init(argc, argv, "mono_vo");
     ros::NodeHandle nh;
-    cv::namedWindow("view");
-    cv::startWindowThread();
-    //ros::Publisher pub_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
+    //cv::namedWindow("view");
+    //cv::startWindowThread();
+    ros::Publisher pub_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
     ros::Publisher pub_image = nh.advertise<sensor_msgs::Image>("image", 1);
-    int max_frame = 500;          // maximum frame to play in KITTI sequence.
+    ros::Publisher pub_path = nh.advertise<nav_msgs::Path>("trajectory",1, true);
+    int max_frame = 4600;          // maximum frame to play in KITTI sequence.
     int min_num_pts = 400;       // minimum number of feature points.
-    std::string fn_kitti = "/home/hekmat/DATA/dataset/";
+    std::string fn_kitti = "/home/hekmat/DATA/dataset";
+
     tf::TransformBroadcaster tf_broadcaster;
     tf::StampedTransform transform;
-    transform.frame_id_ = "/world";
+    transform.frame_id_ = "world";
     transform.child_frame_id_ = "/camera";
+
+    ros::Time current_time, last_time;
+    current_time = ros::Time::now();
+    last_time = ros::Time::now();
+
+    nav_msgs::Path path;
+    path.header.stamp=current_time;
+    path.header.frame_id="/world";
     /*
     message_filters::Subscriber<sensor_msgs::Image> image_sub(nh, "/usb_cam/image_mono", 1);
     message_filters::Subscriber<sensor_msgs::CameraInfo> info_sub(nh, "usb_cam/camera_info", 1);
@@ -545,6 +502,7 @@ int main(int argc, char **argv)
     ros::spin();
     cv::destroyWindow("view");
     */
+
     MonoVO* vo = new MonoVO(max_frame, min_num_pts, fn_kitti);
 
     // Starts from the third image (first and second images are used for the initialization).
@@ -553,7 +511,9 @@ int main(int argc, char **argv)
         if(nframe >= max_frame) {
             break;
         }
-
+        current_time = ros::Time::now();
+        //compute odometry in a typical way given the velocities of the robot
+        double dt = (current_time - last_time).toSec();
         // Perform pose tracking for the n-th frame.
         vo->PoseTracking(nframe);
 
@@ -583,25 +543,26 @@ int main(int argc, char **argv)
         // Braodcast the transform between /world and /camera.
         tf_broadcaster.sendTransform(transform);
 
-        /*nav_msgs::Odometry odom;
-        odom.header.stamp = ros::Time::now();
-        odom.header.frame_id = "/world";
-        odom.child_frame_id = "/camera";
 
+
+        geometry_msgs::PoseStamped this_pose_stamped;
         geometry_msgs::Quaternion odom_quat;
-        odom_quat.x = quat[0];
-        odom_quat.y = quat[1];
-        odom_quat.z = quat[2];
-        odom_quat.w = quat[3];
-
         // Set the position and rotation.
-        odom.pose.pose.position.x = t.at<double>(0);
-        odom.pose.pose.position.y = t.at<double>(1);
-        odom.pose.pose.position.z = t.at<double>(2);
-        odom.pose.pose.orientation = odom_quat;
+        this_pose_stamped.pose.position.x = t.at<double>(0);
+        this_pose_stamped.pose.position.z = 0.0; // t.at<double>(1);
+        this_pose_stamped.pose.position.y = t.at<double>(2);
+        this_pose_stamped.pose.orientation.x = quat[0];
+        this_pose_stamped.pose.orientation.y = quat[1];
+        this_pose_stamped.pose.orientation.z = quat[2];
+        this_pose_stamped.pose.orientation.w = quat[3];
+
+        this_pose_stamped.header.stamp=current_time;
+        this_pose_stamped.header.frame_id="world";
+        path.poses.push_back(this_pose_stamped);
+
 
         // publish to /odom.
-        pub_odom.publish(odom); */
+        pub_path.publish(path);
 
         // Get the result image from vo.
         cv::Mat dst = vo->GetResultImage();
@@ -614,7 +575,12 @@ int main(int argc, char **argv)
         // publish to /image.
         pub_image.publish(cv_ptr->toImageMsg());
 
-        // Increase the number of frame.
+        ifstream fin;
+        ofstream fout;
+        fin.open ("trajectory.txt", ios::out | ios::in);
+        fout.open("trajectory.txt", ios::app | ios::out);
+        fout << t.at<double>(0) <<" "<< 0.0 << " " << t.at<double>(2) << " "<< quat[0] << " " << quat[1] << " " << quat[2] <<" " << quat[3] << endl;
+        last_time = current_time;
         nframe++;
     }
 
