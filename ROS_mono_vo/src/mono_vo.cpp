@@ -18,16 +18,9 @@
 #include <nav_msgs/Path.h>
 #include "../include/ros_mono_vo/vo_features.h"
 #include "../include/ros_mono_vo/Drawtrajectory.h"
-#include "../include/ros_mono_vo/mono_vo.h"
+#include "../include/ros_mono_vo/SkolVIO.h"
 #include "../include/ros_mono_vo/util.h"
 #include "../include/ros_mono_vo/util.cpp"
-//Algorithm Outline:
-//Capture images: ItIt, It+1It+1,
-//Undistort the above images.
-//Use FAST algorithm to detect features in ItIt, and track those features to It+1It+1. A new detection is triggered if the number of features drop below a certain threshold.
-//Use Nister’s 5-point alogirthm with RANSAC to compute the essential matrix.
-//Estimate R,tR,t from the essential matrix that was computed in the previous step.
-//Take scale information from some external source (like a speedometer), and concatenate the translation vectors, and rotation matrices.
 
 
 using namespace std;
@@ -42,25 +35,25 @@ inline float NORM(float a, float b, float c, float d) {
     return sqrt(a * a + b * b + c * c + d * d);
 }
 
-MonoVO::MonoVO(int max_frame, int min_num_pts, std::string fn_kitti)
-        : max_frame_(max_frame), min_num_pts_(min_num_pts), fn_kitti_(fn_kitti), id_(0)
+SkolVIO::SkolVIO(int max_frame, int min_num_pts, std::string dataset_path)
+        : max_frame_(max_frame), min_num_pts_(min_num_pts), dataset_path_(dataset_path), id_(0)
 {
-    // Set several paths.
-    fn_calib_ = fn_kitti_ + "/sequences/02/calib.txt";
-    fn_poses_ = fn_kitti_ + "/poses/02.txt";
-    fn_images_ = fn_kitti_ + "/sequences/02/image_1/";
 
-    // Set the trajectory image.
+    data_calib_ = dataset_path_ + "/sequences/02/calib.txt";
+    data_poses_ = dataset_path_ + "/poses/02.txt";
+    data_images_ = dataset_path_ + "/sequences/02/image_1/";
+
+
     img_traj_ = cv::Mat::zeros(600, 600, CV_8UC3);
 
-    // Fetch the focal length and pricipal point.
-    MonoVO::FetchIntrinsicParams();
 
-    MonoVO::Initialization();
+    SkolVIO::FetchIntrinsicParams();
+
+    SkolVIO::Initialization();
 }
 
 
-void MonoVO::ReduceVector(std::vector<int> &v) {
+void SkolVIO::ReduceVector(std::vector<int> &v) {
     int j=0;
 
     for(int i=0; i<int(v.size()); i++) {
@@ -70,7 +63,7 @@ void MonoVO::ReduceVector(std::vector<int> &v) {
     }
     v.resize(j);
 }
-void MonoVO::FeatureTracking(cv::Mat img1,
+void SkolVIO::FeatureTracking(cv::Mat img1,
                              cv::Mat img2,
                              std::vector<cv::Point2f> &p1,
                              std::vector<cv::Point2f> &p2)
@@ -99,7 +92,7 @@ void MonoVO::FeatureTracking(cv::Mat img1,
         }
     }
 }
-void MonoVO::FeatureDetection(cv::Mat img, std::vector<cv::Point2f> &p)
+void SkolVIO::FeatureDetection(cv::Mat img, std::vector<cv::Point2f> &p)
 {
     std::vector<cv::KeyPoint> kpt;
 
@@ -118,9 +111,9 @@ void MonoVO::FeatureDetection(cv::Mat img, std::vector<cv::Point2f> &p)
 }
 
 
-void MonoVO::FetchIntrinsicParams() {
+void SkolVIO::FetchIntrinsicParams() {
     // Read the calib.txt file.
-    std::ifstream fin(fn_calib_);
+    std::ifstream fin(data_calib_);
     std::string line;
 
     if(fin.is_open()) {
@@ -143,23 +136,23 @@ void MonoVO::FetchIntrinsicParams() {
         fin.close();
     }
     else {
-        std::cout << "[-] Cannot read the calibration file: " << fn_calib_ << std::endl;
+        std::cout << "[-] Cannot read the calibration file: " << data_calib_ << std::endl;
         f_ = 0;
         pp_ = cv::Point2f(0,0);
     }
 }
 
-void MonoVO::ComputeAbsoluteScale(int nframe)
+void SkolVIO::ComputeAbsoluteScale(int num_frame)
 {
     std::string line;
     int i=0;
-    std::ifstream fin(fn_poses_);
+    std::ifstream fin(data_poses_);
 
     double x=0,y=0,z=0;
     double prev_x, prev_y, prev_z;
 
     if(fin.is_open()) {
-        while((std::getline(fin, line)) && (i<=nframe)) {
+        while((std::getline(fin, line)) && (i<=num_frame)) {
             prev_z = z;
             prev_y = y;
             prev_x = x;
@@ -175,7 +168,7 @@ void MonoVO::ComputeAbsoluteScale(int nframe)
         fin.close();
     }
     else {
-        std::cout << "[-] Unable to open file: " << fn_poses_ << std::endl;
+        std::cout << "[-] Unable to open file: " << data_poses_ << std::endl;
         scale_ = 0;
         return;
     }
@@ -185,16 +178,16 @@ void MonoVO::ComputeAbsoluteScale(int nframe)
                         (z-prev_z)*(z-prev_z));
 }
 
-void MonoVO::Initialization() {
+void SkolVIO::Initialization() {
     // initialize (using first two frames).
     scale_ = 1.0;
 
-    std::string fn1 = fn_images_ + util::AddZeroPadding(0, 6) + ".png";
-    std::string fn2 = fn_images_ + util::AddZeroPadding(1, 6) + ".png";
+    std::string data1 = data_images_ + util::AddZeroPadding(0, 6) + ".png";
+    std::string data2 = data_images_ + util::AddZeroPadding(1, 6) + ".png";
 
     // Load the fist two images.
-    cv::Mat img1 = cv::imread(fn1, cv::IMREAD_GRAYSCALE);
-    cv::Mat img2 = cv::imread(fn2, cv::IMREAD_GRAYSCALE);
+    cv::Mat img1 = cv::imread(data1, cv::IMREAD_GRAYSCALE);
+    cv::Mat img2 = cv::imread(data2, cv::IMREAD_GRAYSCALE);
 
     // Feature extraction and tracking.
     std::vector<cv::Point2f> p1, p2;
@@ -211,7 +204,7 @@ void MonoVO::Initialization() {
     prev_R_ = curr_R_.clone();
     prev_t_ = curr_t_.clone();
 }
-void MonoVO::Visualize(int nframe) {
+void SkolVIO::Visualize(int num_frame) {
     cv::Mat effect = cv::Mat::zeros(cv::Size(dst_.cols, dst_.rows), CV_8UC3);
 
     // Draw tracking image.
@@ -238,14 +231,14 @@ void MonoVO::Visualize(int nframe) {
 }
 
 
-void MonoVO::PoseTracking(int nframe) {
+void SkolVIO::PoseTracking(int num_frame) {
     // pose tracking starts from the third image.
-    if(nframe > max_frame_) {
+    if(num_frame > max_frame_) {
         return;
     }
 
-    std::string fn = fn_images_ + util::AddZeroPadding(nframe, 6) + ".png";
-    cv::Mat curr_img_color = cv::imread(fn);
+    std::string data = data_images_ + util::AddZeroPadding(num_frame, 6) + ".png";
+    cv::Mat curr_img_color = cv::imread(data);
     cv::cvtColor(curr_img_color, curr_img_, cv::COLOR_BGR2GRAY);
 
     // Feature tracking.
@@ -258,7 +251,7 @@ void MonoVO::PoseTracking(int nframe) {
     cv::recoverPose(E_, curr_pts_, prev_pts_, curr_R_, curr_t_, f_, pp_, mask_);
 
     // Get the scale.
-    ComputeAbsoluteScale(nframe);
+    ComputeAbsoluteScale(num_frame);
 
     if((scale_>0.1) &&
        (curr_t_.at<double>(2) > curr_t_.at<double>(0)) &&
@@ -285,7 +278,7 @@ void MonoVO::PoseTracking(int nframe) {
     dst_ = curr_img_color.clone();
 
     // Draw result.
-    MonoVO::Visualize(nframe);
+    SkolVIO::Visualize(num_frame);
 
     prev_img_ = curr_img_.clone();
     prev_pts_ = curr_pts_;
@@ -430,7 +423,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& image, const sensor_msgs::C
               std::cout<<"Convert again to quaternion q1="<<std::endl;
               Eigen::Quaterniond q1(m1);
               Print_Quaternion(q1);
-              //Output_data(q, T)
+
 
           }
 
@@ -476,9 +469,9 @@ int main(int argc, char **argv)
     ros::Publisher pub_odom = nh.advertise<nav_msgs::Odometry>("odom", 1);
     ros::Publisher pub_image = nh.advertise<sensor_msgs::Image>("image", 1);
     ros::Publisher pub_path = nh.advertise<nav_msgs::Path>("trajectory",1, true);
-    int max_frame = 4600;          // maximum frame to play in KITTI sequence.
+    int max_frame  = 4600;          // maximum frame to play in KITTI sequence.
     int min_num_pts = 400;       // minimum number of feature points.
-    std::string fn_kitti = "/home/hekmat/DATA/dataset";
+    std::string dataset_path = "/home/hekmat/DATA/dataset";
 
     tf::TransformBroadcaster tf_broadcaster;
     tf::StampedTransform transform;
@@ -492,7 +485,7 @@ int main(int argc, char **argv)
     nav_msgs::Path path;
     path.header.stamp=current_time;
     path.header.frame_id="/world";
-    /*
+/*
     message_filters::Subscriber<sensor_msgs::Image> image_sub(nh, "/usb_cam/image_mono", 1);
     message_filters::Subscriber<sensor_msgs::CameraInfo> info_sub(nh, "usb_cam/camera_info", 1);
     message_filters::TimeSynchronizer<sensor_msgs::Image, sensor_msgs::CameraInfo> sync(image_sub, info_sub, 10);
@@ -501,21 +494,21 @@ int main(int argc, char **argv)
  //   image_transport::Subscriber sub = it.subscribe("usb_cam/image_raw", 1, imageCallback);
     ros::spin();
     cv::destroyWindow("view");
-    */
+*/
 
-    MonoVO* vo = new MonoVO(max_frame, min_num_pts, fn_kitti);
+    SkolVIO* vo = new SkolVIO(max_frame, min_num_pts, dataset_path);
 
     // Starts from the third image (first and second images are used for the initialization).
-    int nframe = 2;
+    int num_frame = 2;
     while(ros::ok()) {
-        if(nframe >= max_frame) {
+        if(num_frame >= max_frame) {
             break;
         }
         current_time = ros::Time::now();
         //compute odometry in a typical way given the velocities of the robot
         double dt = (current_time - last_time).toSec();
         // Perform pose tracking for the n-th frame.
-        vo->PoseTracking(nframe);
+        vo->PoseTracking(num_frame);
 
         // Get rotation and translation from vo.
         cv::Mat R = vo->GetRotation();
@@ -532,7 +525,7 @@ int main(int argc, char **argv)
         round->set64fPrecision(3);
         round->set32fPrecision(3);
 
-        std::cout << std::endl << "[+] " << util::AddZeroPadding(nframe,6) << std::endl;
+        std::cout << std::endl << "[+] " << util::AddZeroPadding(num_frame,6) << std::endl;
         std::cout << "Rotation(euler):  " <<  std::setprecision(3) << "[" << euler.val[0] << ", " << euler.val[1] << ", " << euler.val[2] << "]" << std::endl;
         std::cout << "Translate(x,y,z): " << round->format(t.t()) << std::endl;
 
@@ -581,7 +574,7 @@ int main(int argc, char **argv)
         fout.open("trajectory.txt", ios::app | ios::out);
         fout << t.at<double>(0) <<" "<< 0.0 << " " << t.at<double>(2) << " "<< quat[0] << " " << quat[1] << " " << quat[2] <<" " << quat[3] << endl;
         last_time = current_time;
-        nframe++;
+        num_frame++;
     }
 
     string trajectory_file = "/home/hekmat/catkin_ws/trajectory.txt";
