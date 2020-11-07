@@ -174,6 +174,135 @@ def get_objpoints_and_imgpoints(matches, struct_indices, structure, key_points):
 
     return np.array(object_points), np.array(image_points)
 
+def get_3dpos(pos, ob, r, t, K):
+    dtype = np.float32
+    def F(x):
+        p,J = cv2.projectPoints(x.reshape(1, 1, 3), r, t, K, np.array([]))
+        p = p.reshape(2)
+        e = ob - p
+        err = e
+
+        return err
+    res = least_squares(F, pos)
+    return res.x
+def get_3dpos_v1(pos, ob, r, t, K):
+    p, J = cv2.projectPoints(pos.reshape(1, 1, 3), r, t, K, np.array([]))
+    p = p.reshape(2)
+    e = ob - p
+    if abs(e[0]) > config.x or abs(e[1]) > config.y:
+        return None
+    return pos
+
+def bundle_adjustment(rotations, motions, K, correspond_struct_idx, key_points_for_all, structure):
+
+    for i in range(len(rotations)):
+        r, _ = cv2.Rodrigues(rotations[i])
+        rotations[i]= r
+    for i in range(len(correspond_struct_idx)):
+        point3d_ids = correspond_struct_idx[i]
+        key_points = key_points_for_all[i]
+        r = rotations[i]
+        t = motions[i]
+        for j in range(len(point3d_ids)):
+            point3d_id = int(point3d_ids[j])
+            if point3d_id < 0:
+                continue
+            new_point = get_3dpos_v1(structure[point3d_id], key_points[j].pt, r, t, K)
+            structure[point3d_id] = new_point
+
+    return structure
+
+def fig(structure, colors):
+    colors /= 255
+
+    for i in range(len(colors)):
+        colors[i, :] = colors[i, :][[2, 1, 0]]
+    fig = plt.figure()
+    fig.suptile('3d')
+    for i in range(len(structure)):
+        ax.scatter(structure[i,0], structure[i, 1], structure[i, 2], color = colors[i, :], s=5)
+    ax.set_xlabel('x axis')
+    ax.set_ylabel('y axis')
+    ax.set_zlabel('z axis')
+    ax.view_init(elev=135, azim=90)
+    plt.show()
+
+def fig_v1(structure):
+
+    mlab.points3d(structure[:, 0], structure[:, 1], structure[:, 2], mode= 'point', name = 'dinosaur')
+    mlab.show()
+
+
+def fig_v2(structure, colors):
+    for i in range(len(structure)):
+        mlab.points3d(structure[i][0], structure[i][1], structure[i][2],
+                      mode='point', name='dinosaur', color=colors[i])
+
+    mlab.show()
+
+def main():
+    imgdir = config.image_dir
+    img_names = os.listdir(imgdir)
+    img_names = sorted(img_names)
+
+    for i in range(len(img_names)):
+        img_names[i] = imgdir + img_names[i]
+
+    K = config.K
+
+    key_points_for_all, descriptor_for_all, colors_for_all = extract_features(img_names)
+    matches_for_all = match_all_features(descriptor_for_all)
+    structure, correspond_struct_idx, colors, rotations, motions = init_structure(K, key_points_for_all, colors_for_all,
+                                                                                  matches_for_all)
+    for i in range(1, len(matches_for_all)):
+        object_points, image_points = get_objpoints_and_imgpoints(matches_for_all[i], correspond_struct_idx[i],
+                                                                  structure, key_points_for_all[i + 1])
+        if len(image_points) < 7:
+            while len(image_points) < 7:
+                object_points = np.append(object_points, [object_points[0]], axis=0)
+                image_points = np.append(image_points, [image_points[0]], axis=0)
+
+        _, r, T, _ = cv2.solvePnPRansac(object_points, image_points, K, np.array([]))
+        R, _ = cv2.Rodrigues(r)
+        rotations.append(R)
+        motions.append(T)
+        p1, p2 = get_matched_points(key_points_for_all[i], key_points_for_all[i + 1], matches_for_all[i])
+        c1, c2 = get_matched_colors(colors_for_all[i], colors_for_all[i + 1], matches_for_all[i])
+        next_structure = reconstruct(K, rotations[i], motions[i], R, T, p1, p2)
+
+        correspond_struct_idx[i], correspond_struct_idx[i + 1], structure, colors = fusion_structure(matches_for_all[i],
+                                                                                                     correspond_struct_idx[
+                                                                                                         i],
+                                                                                                     correspond_struct_idx[
+                                                                                                         i + 1],
+                                                                                                     structure,
+                                                                                                     next_structure,
+                                                                                                     colors, c1)
+    structure = bundle_adjustment(rotations, motions, K, correspond_struct_idx, key_points_for_all, structure)
+    i = 0
+
+    while i < len(structure):
+        if math.isnan(structure[i][0]):
+            structure = np.delete(structure, i, 0)
+            colors = np.delete(colors, i, 0)
+            i -= 1
+        i += 1
+
+    print(len(structure))
+    print(len(motions))
+
+    fig_v1(structure)
+
+if if __name__ == '__main__':
+    main()
+
+
+
+
+
+
+
+
 
 
 
